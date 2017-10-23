@@ -134,12 +134,9 @@ func (r *Records) bytes(input interface{}, records Records) []byte {
 			}
 			records = append(records, record)
 		}
-		for i, record := range records {
+		for _, record := range records {
 			// fmt.Printf("%s\n", record.Bytes())
 			routingDirectoryFileBuf.Write(record.Bytes())
-			if i < len(input.([][]string)) {
-				routingDirectoryFileBuf.WriteByte(byte('\n'))
-			}
 		}
 	default:
 		panic("Cannot marshal provided struct.")
