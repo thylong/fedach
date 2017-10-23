@@ -3,6 +3,7 @@ package fedach
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -13,39 +14,80 @@ import (
 // pointed to by v.
 // If v is nil or not a pointer, Unmarshal returns an InvalidUnmarshalError.
 func Unmarshal(data []byte, v interface{}) error {
-	records := []RoutingDirectoryRecord{}
 	reader := bytes.NewBuffer(data)
-	for {
-		line, err := reader.ReadString('\n')
 
-		if len(line) == 0 {
-			reflect.ValueOf(v).Elem().Set(reflect.ValueOf(records))
-			return nil
-		}
+	switch reflect.TypeOf(v).String() {
+	case "*[][]string":
+		records := [][]string{}
+		SampleRecord := RoutingDirectoryRecord{}
+		for {
+			line, err := reader.ReadString('\n')
 
-		record := RoutingDirectoryRecord{}
-		t := reflect.TypeOf(&record).Elem()
-		for i := 0; i < t.NumField(); i++ {
-			pos := t.Field(i).Tag.Get("pos")
-			indexes := strings.Split(pos, "-")
-
-			start, _ := strconv.ParseInt(indexes[0], 10, 64)
-
-			var end int64
-			if len(indexes) == 2 {
-				end, _ = strconv.ParseInt(indexes[1], 10, 64)
-			} else {
-				end = start
+			if len(line) == 0 {
+				reflect.ValueOf(v).Elem().Set(reflect.ValueOf(records))
+				return nil
 			}
 
-			value := reflect.ValueOf(line[start-1 : end])
-			reflect.ValueOf(&record).Elem().Field(i).Set(value)
+			record := []string{}
+
+			t := reflect.TypeOf(&SampleRecord).Elem()
+			for i := 0; i < t.NumField(); i++ {
+				pos := t.Field(i).Tag.Get("pos")
+				indexes := strings.Split(pos, "-")
+
+				start, _ := strconv.ParseInt(indexes[0], 10, 64)
+
+				var end int64
+				if len(indexes) == 2 {
+					end, _ = strconv.ParseInt(indexes[1], 10, 64)
+				} else {
+					end = start
+				}
+
+				record = append(record, line[start-1:end])
+			}
+			records = append(records, record)
+			if err != nil {
+				reflect.ValueOf(v).Elem().Set(reflect.ValueOf(records))
+				return nil
+			}
 		}
-		records = append(records, record)
-		if err != nil {
-			reflect.ValueOf(v).Elem().Set(reflect.ValueOf(records))
-			return nil
+	case "*[]fedach.RoutingDirectoryRecord":
+		records := []RoutingDirectoryRecord{}
+		for {
+			line, err := reader.ReadString('\n')
+
+			if len(line) == 0 {
+				reflect.ValueOf(v).Elem().Set(reflect.ValueOf(records))
+				return nil
+			}
+
+			record := RoutingDirectoryRecord{}
+			t := reflect.TypeOf(&record).Elem()
+			for i := 0; i < t.NumField(); i++ {
+				pos := t.Field(i).Tag.Get("pos")
+				indexes := strings.Split(pos, "-")
+
+				start, _ := strconv.ParseInt(indexes[0], 10, 64)
+
+				var end int64
+				if len(indexes) == 2 {
+					end, _ = strconv.ParseInt(indexes[1], 10, 64)
+				} else {
+					end = start
+				}
+
+				value := reflect.ValueOf(line[start-1 : end])
+				reflect.ValueOf(&record).Elem().Field(i).Set(value)
+			}
+			records = append(records, record)
+			if err != nil {
+				reflect.ValueOf(v).Elem().Set(reflect.ValueOf(records))
+				return nil
+			}
 		}
+	default:
+		return fmt.Errorf("Can't Unmarshal to %s, use *[][]string or *[]fedach.RoutingDirectoryRecord ", reflect.TypeOf(v).String())
 	}
 }
 

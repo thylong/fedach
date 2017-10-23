@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestUnmarshal(t *testing.T) {
+func TestUnmarshalToStruct(t *testing.T) {
 	cases := []struct {
 		input          []byte
 		ExpectedOutput []RoutingDirectoryRecord
@@ -17,6 +17,32 @@ func TestUnmarshal(t *testing.T) {
 	}
 	for _, tc := range cases {
 		var output []RoutingDirectoryRecord
+
+		err := Unmarshal(tc.input, &output)
+		if err != tc.ExpectedErr {
+			t.Errorf("Unmarshal func returned wrong error: got %#v want %#v",
+				err, tc.ExpectedErr)
+		}
+
+		if !reflect.DeepEqual(tc.ExpectedOutput, output) {
+			t.Errorf("Unmarshal func returned wrong output: got %#v want %#v",
+				output, tc.ExpectedOutput)
+		}
+	}
+}
+
+func TestUnmarshalToSlice(t *testing.T) {
+	cases := []struct {
+		input          []byte
+		ExpectedOutput [][]string
+		ExpectedErr    error
+	}{
+		{[]byte(`011000015O0110000150122415000000000FEDERAL RESERVE BANK                1000 PEACHTREE ST N.E.              ATLANTA             GA303094470877372245711     `), [][]string{{"011000015", "O", "011000015", "0", "122415", "000000000", "FEDERAL RESERVE BANK                ", "1000 PEACHTREE ST N.E.              ", "ATLANTA             ", "GA", "30309", "4470", "877", "372", "2457", "1", "1", "     "}}, nil},
+		{[]byte(`011000015O0110000150122415000000000FEDERAL RESERVE BANK                1000 PEACHTREE ST N.E.              ATLANTA             GA303094470877372245711     
+`), [][]string{{"011000015", "O", "011000015", "0", "122415", "000000000", "FEDERAL RESERVE BANK                ", "1000 PEACHTREE ST N.E.              ", "ATLANTA             ", "GA", "30309", "4470", "877", "372", "2457", "1", "1", "     "}}, nil},
+	}
+	for _, tc := range cases {
+		var output [][]string
 
 		err := Unmarshal(tc.input, &output)
 		if err != tc.ExpectedErr {
