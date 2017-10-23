@@ -78,3 +78,39 @@ func TestMarshal(t *testing.T) {
 		}
 	}
 }
+
+func TestSymmetryStruct(t *testing.T) {
+	cases := []struct {
+		input []byte
+	}{
+		{[]byte(`011000015O0110000150122415000000000FEDERAL RESERVE BANK                1000 PEACHTREE ST N.E.              ATLANTA             GA303094470877372245711     `)},
+	}
+	for _, tc := range cases {
+		var um []RoutingDirectoryRecord
+		Unmarshal(tc.input, &um)
+		output, _ := Marshal(um)
+
+		if !reflect.DeepEqual(tc.input, output) {
+			t.Errorf("Unmarshal func returned wrong output: got %s want %s\n, output length: %d input length: %d",
+				output, tc.input, len(output), len(tc.input))
+		}
+	}
+}
+
+func TestSymmetryStringSlice(t *testing.T) {
+	cases := []struct {
+		input []byte
+	}{
+		{[]byte(`011000015O0110000150122415000000000FEDERAL RESERVE BANK                1000 PEACHTREE ST N.E.              ATLANTA             GA303094470877372245711     `)},
+	}
+	for _, tc := range cases {
+		var um [][]string
+		Unmarshal(tc.input, &um)
+		output, _ := Marshal(um)
+
+		if !reflect.DeepEqual(tc.input, output) {
+			t.Errorf("Unmarshal func returned wrong output: got %s want %s\n, output length: %d input length: %d",
+				output, tc.input, len(output), len(tc.input))
+		}
+	}
+}
