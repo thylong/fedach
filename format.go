@@ -38,16 +38,16 @@ func (r *RoutingDirectoryRecord) Bytes() []byte {
 
 	t := reflect.TypeOf(r).Elem()
 	for i := 0; i < t.NumField(); i++ {
-		fieldBytes := FieldBytes(r, i)
+		Encodedfield := fieldBytes(r, i)
 
-		routingDirectoryLine.Write(fieldBytes)
+		routingDirectoryLine.Write(Encodedfield)
 		routingDirectoryLine.Bytes()
 	}
 	return routingDirectoryLine.Bytes()
 }
 
-// FieldBytes encode field and return bytes.
-func FieldBytes(r *RoutingDirectoryRecord, i int) []byte {
+// fieldBytes encode field and return bytes.
+func fieldBytes(r *RoutingDirectoryRecord, i int) []byte {
 	t := reflect.TypeOf(r).Elem()
 	field := t.Field(i)
 
